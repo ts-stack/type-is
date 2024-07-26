@@ -11,13 +11,36 @@ import contentType from 'content-type';
 import mime from 'mime-types';
 
 /**
- * Compare a `actual` content-type with `acceptable`.
- * Each `acceptable` can be an extension like `html`,
- * a special shortcut like `multipart` or `urlencoded`,
- * or a mime type.
- *
- * If no types match, `false` is returned.
- * Otherwise, the first `type` that matches is returned.
+Checks if the `mediaType` is one of the `types`. If the `mediaType` is invalid
+or does not matches any of the `types`, then `false` is returned. Otherwise, a
+string of the type that matched is returned.
+
+The `mediaType` argument is expected to be a
+[media type](https://tools.ietf.org/html/rfc6838) string. The `types` argument
+is an array of type strings.
+
+Each type in the `types` array can be one of the following:
+
+- A file extension name such as `json`. This name will be returned if matched.
+- A mime type such as `application/json`.
+- A mime type with a wildcard such as `* /*` or `* /json` or `application/*`.
+  The full mime type will be returned if matched.
+- A suffix such as `+json`. This can be combined with a wildcard such as
+  `* /vnd+json` or `application/*+json`. The full mime type will be returned
+  if matched.
+
+Some examples to illustrate the inputs and returned value:
+
+```js
+var mediaType = 'application/json'
+
+typeis.is(mediaType, ['json']) // => 'json'
+typeis.is(mediaType, ['html', 'json']) // => 'json'
+typeis.is(mediaType, ['application/*']) // => 'application/json'
+typeis.is(mediaType, ['application/json']) // => 'application/json'
+
+typeis.is(mediaType, ['html']) // => false
+```
  */
 export function is(actual?: any, ...acceptable: string[]): string | false;
 export function is(actual?: any, acceptable?: string[]): string | false;
@@ -57,35 +80,55 @@ export function is(actual_?: string | null, acceptable?: string | string[]): str
 }
 
 /**
- * Check if a request has a request body.
- * A request with a body __must__ either have `transfer-encoding`
- * or `content-length` headers set.
- * http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.3
+ * Returns a Boolean if the given `headers` has `transfer-encoding` or `content-length` field, regardless of the
+ * `Content-Type` header.
+ * 
+ * Having a body has no relation to how large the body is (it may be 0 bytes).
+ * This is similar to how file existence works. If a body does exist, then this
+ * indicates that there is data to read from the Node.js request stream.
+ * 
+```ts
+if (typeis.hasBody(headers)) {
+  // read the body, since there is one
+}
+```
+ * 
+ * See also http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.3
  */
 export function hasBody(headers: IncomingHttpHeaders) {
   return headers['transfer-encoding'] !== undefined || !isNaN(headers['content-length'] as unknown as number);
 }
 
 /**
- * Check if the `headers` contains the "Content-Type"
- * field, and it contains any of the give mime `acceptable` types.
- * If there is no request body, `null` is returned.
- * If there is no content type, `false` is returned.
- * Otherwise, it returns the first `type` that matches.
- *
- * Examples:
- *
- *     // With Content-Type: text/html; charset=utf-8
- *     typeIs(headers, 'html'); // => 'html'
- *     typeIs(headers, 'text/html'); // => 'text/html'
- *     typeIs(headers, 'text/*', 'application/json'); // => 'text/html'
- *
- *     // When Content-Type is application/json
- *     typeIs(headers, 'json', 'urlencoded'); // => 'json'
- *     typeIs(headers, 'application/json'); // => 'application/json'
- *     typeIs(headers, 'html', 'application/*'); // => 'application/json'
- *
- *     typeIs(headers, 'html'); // => false
+ * Checks if the `headers` is one of the `types`. If the headers has no `transfer-encoding` and
+ * no `content-length`, regardless of the `Content-Type` header, then `null` is returned.
+ * If the `Content-Type` header is invalid or does not matches any of the `types`, then
+ * `false` is returned. Otherwise, a string of the type that matched is returned.
+ * 
+ * The `headers` argument is expected to be a Node.js HTTP headers. The `types` argument
+ * is an array of type strings.
+ * 
+ * Each type in the `types` array can be one of the following:
+ * 
+ * - A file extension name such as `json`. This name will be returned if matched.
+ * - A mime type such as `application/json`.
+ * - A mime type with a wildcard such as `* /*` or `* /json` or `application/*`. The full mime
+ * type will be returned if matched.
+ * - A suffix such as `+json`. This can be combined with a wildcard such as `* /vnd+json` or `application/*+json`. The full mime type will be returned
+ * if matched.
+ * 
+ * Some examples to illustrate the inputs and returned value:
+ * 
+```js
+// headers.content-type = 'application/json'
+
+typeis(headers, ['json']) // => 'json'
+typeis(headers, ['html', 'json']) // => 'json'
+typeis(headers, ['application/*']) // => 'application/json'
+typeis(headers, ['application/json']) // => 'application/json'
+
+typeis(headers, ['html']) // => false
+```
  */
 export function typeIs(headers: IncomingHttpHeaders, ...acceptable: string[]): string | false | null;
 export function typeIs(headers: IncomingHttpHeaders, acceptable?: string[]): string | false | null;
@@ -144,9 +187,19 @@ export function normalize(type: string): string | false | null {
 }
 
 /**
- * Check if `expected` mime type
- * matches `actual` mime type with
- * wildcard and +suffix support.
+Match the type string `expected` with `actual`, taking in to account wildcards.
+A wildcard can only be in the type of the subtype part of a media type and only
+in the `expected` value (as `actual` should be the real media type to match). A
+suffix can still be included even with a wildcard subtype. If an input is
+malformed, `false` will be returned.
+
+```js
+mimeMatch('text/html', 'text/html') // => true
+mimeMatch('* /html', 'text/html') // => true
+mimeMatch('text/*', 'text/html') // => true
+mimeMatch('* /*', 'text/html') // => true
+mimeMatch('* /*+json', 'application/x-custom+json') // => true
+```
  */
 export function mimeMatch(expected: string | false, actual: string): boolean {
   // invalid type
@@ -185,7 +238,19 @@ export function mimeMatch(expected: string | false, actual: string): boolean {
 }
 
 /**
- * Normalize a type and remove parameters.
+Normalize a `type` string. This works by performing the following:
+
+- If the `type` is not a string, `false` is returned.
+- If the string starts with `+` (so it is a `+suffix` shorthand like `+json`),
+  then it is expanded to contain the complete wildcard notation of `* /*+suffix`.
+  - If the string contains a `/`, then it is returned as the type.
+  - Else the string is assumed to be a file extension and the mapped media type is
+    returned, or `false` is there is no mapping.
+  
+  This includes two special mappings:
+  
+  - `'multipart'` -> `'multipart/*'`
+  - `'urlencoded'` -> `'application/x-www-form-urlencoded'`
  */
 function normalizeType(value: string): string {
   // parse the type

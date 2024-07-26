@@ -1,9 +1,10 @@
 {
   "name": "@ts-stack/type-is",
   "type": "module",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "A fork of the widely used `type-is` library, but this one accepts headers instead of a request object.",
   "exports": "./dist/index.js",
+  "repository": "https://github.com/ts-stack/type-is",
   "scripts": {
     "start": "npm run build && node dist/index.js",
     "test": "npm run build && npm run esm-jest",
@@ -11,7 +12,10 @@
     "build": "tsc -b tsconfig.build.json",
     "clean": "rimraf dist*"
   },
-  "keywords": [],
+  "keywords": [
+    "ts-stack",
+    "mime"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -32,5 +36,8 @@
     "rimraf": "^5.0.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">= 20.6.0"
   }
 }
