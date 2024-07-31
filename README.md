@@ -1,6 +1,6 @@
 # @ts-stack/type-is
 
-Infer the content-type of a headers.
+Infer the content-type of a request by headers. This is a fork of [type-is](https://github.com/jshttp/type-is), but this one accepts headers instead of a request object. Writen in TypeScript in format ESM.
 
 ## Install
 

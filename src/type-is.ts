@@ -32,14 +32,14 @@ Each type in the `types` array can be one of the following:
 Some examples to illustrate the inputs and returned value:
 
 ```js
-var mediaType = 'application/json'
+const mediaType = 'application/json';
 
-typeis.is(mediaType, ['json']) // => 'json'
-typeis.is(mediaType, ['html', 'json']) // => 'json'
-typeis.is(mediaType, ['application/*']) // => 'application/json'
-typeis.is(mediaType, ['application/json']) // => 'application/json'
+is(mediaType, ['json']); // => 'json'
+is(mediaType, ['html', 'json']); // => 'json'
+is(mediaType, ['application/*']); // => 'application/json'
+is(mediaType, ['application/json']); // => 'application/json'
 
-typeis.is(mediaType, ['html']) // => false
+is(mediaType, ['html']); // => false
 ```
  */
 export function is(actual?: any, ...acceptable: string[]): string | false;
@@ -88,7 +88,7 @@ export function is(actual_?: string | null, acceptable?: string | string[]): str
  * indicates that there is data to read from the Node.js request stream.
  * 
 ```ts
-if (typeis.hasBody(headers)) {
+if (hasBody(headers)) {
   // read the body, since there is one
 }
 ```
@@ -119,8 +119,8 @@ export function hasBody(headers: IncomingHttpHeaders) {
  * 
  * Some examples to illustrate the inputs and returned value:
  * 
-```js
-// headers.content-type = 'application/json'
+```ts
+// const headers = { 'content-type': 'application/json' };
 
 typeis(headers, ['json']) // => 'json'
 typeis(headers, ['html', 'json']) // => 'json'
@@ -154,19 +154,22 @@ export function typeIs(headers: IncomingHttpHeaders, acceptable?: string | strin
 }
 
 /**
- * Normalize a mime type.
- * If it's a shorthand, expand it to a valid mime type.
- *
- * In general, you probably want:
-```ts
-const type = is(headers, ['urlencoded', 'json', 'multipart']);
-```
- * Then use the appropriate body parsers.
- * These three are the most common request body types
- * and are thus ensured to work.
+Normalize a `type` string. This works by performing the following:
+
+- If the `type` is not a string, `false` is returned.
+- If the string starts with `+` (so it is a `+suffix` shorthand like `+json`),
+  then it is expanded to contain the complete wildcard notation of `* /*+suffix`.
+  - If the string contains a `/`, then it is returned as the type.
+  - Else the string is assumed to be a file extension and the mapped media type is
+    returned, or `false` is there is no mapping.
+  
+  This includes two special mappings:
+  
+  - `'multipart'` -> `'multipart/*'`
+  - `'urlencoded'` -> `'application/x-www-form-urlencoded'`
  */
 export function normalize(type: string): string | false | null {
-  if (typeof type !== 'string') {
+  if (typeof type != 'string') {
     // invalid type
     return false;
   }
@@ -238,19 +241,7 @@ export function mimeMatch(expected: string | false, actual: string): boolean {
 }
 
 /**
-Normalize a `type` string. This works by performing the following:
-
-- If the `type` is not a string, `false` is returned.
-- If the string starts with `+` (so it is a `+suffix` shorthand like `+json`),
-  then it is expanded to contain the complete wildcard notation of `* /*+suffix`.
-  - If the string contains a `/`, then it is returned as the type.
-  - Else the string is assumed to be a file extension and the mapped media type is
-    returned, or `false` is there is no mapping.
-  
-  This includes two special mappings:
-  
-  - `'multipart'` -> `'multipart/*'`
-  - `'urlencoded'` -> `'application/x-www-form-urlencoded'`
+ * Normalize a type and remove parameters.
  */
 function normalizeType(value: string): string {
   // parse the type
