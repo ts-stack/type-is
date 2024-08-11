@@ -11,15 +11,15 @@ import contentType from 'content-type';
 import mime from 'mime-types';
 
 /**
-Checks if the `mediaType` is one of the `types`. If the `mediaType` is invalid
-or does not matches any of the `types`, then `false` is returned. Otherwise, a
+Checks if the `mediaType` is one of the `acceptable`. If the `mediaType` is invalid
+or does not matches any of the `acceptable`, then `false` is returned. Otherwise, a
 string of the type that matched is returned.
 
 The `mediaType` argument is expected to be a
-[media type](https://tools.ietf.org/html/rfc6838) string. The `types` argument
+[media type](https://tools.ietf.org/html/rfc6838) string. The `acceptable` argument
 is an array of type strings.
 
-Each type in the `types` array can be one of the following:
+Each type in the `acceptable` array can be one of the following:
 
 - A file extension name such as `json`. This name will be returned if matched.
 - A mime type such as `application/json`.
@@ -100,15 +100,15 @@ export function hasBody(headers: IncomingHttpHeaders) {
 }
 
 /**
- * Checks if the `headers` is one of the `types`. If the headers has no `transfer-encoding` and
+ * Checks if the `headers` is one of the `acceptable`. If the headers has no `transfer-encoding` and
  * no `content-length`, regardless of the `Content-Type` header, then `null` is returned.
- * If the `Content-Type` header is invalid or does not matches any of the `types`, then
+ * If the `Content-Type` header is invalid or does not matches any of the `acceptable`, then
  * `false` is returned. Otherwise, a string of the type that matched is returned.
  * 
- * The `headers` argument is expected to be a Node.js HTTP headers. The `types` argument
+ * The `headers` argument is expected to be a Node.js HTTP headers. The `acceptable` argument
  * is an array of type strings.
  * 
- * Each type in the `types` array can be one of the following:
+ * Each type in the `acceptable` array can be one of the following:
  * 
  * - A file extension name such as `json`. This name will be returned if matched.
  * - A mime type such as `application/json`.
@@ -122,12 +122,12 @@ export function hasBody(headers: IncomingHttpHeaders) {
 ```ts
 // const headers = { 'content-type': 'application/json' };
 
-typeis(headers, ['json']) // => 'json'
-typeis(headers, ['html', 'json']) // => 'json'
-typeis(headers, ['application/*']) // => 'application/json'
-typeis(headers, ['application/json']) // => 'application/json'
+typeIs(headers, ['json']) // => 'json'
+typeIs(headers, ['html', 'json']) // => 'json'
+typeIs(headers, ['application/*']) // => 'application/json'
+typeIs(headers, ['application/json']) // => 'application/json'
 
-typeis(headers, ['html']) // => false
+typeIs(headers, ['html']) // => false
 ```
  */
 export function typeIs(headers: IncomingHttpHeaders, ...acceptable: string[]): string | false | null;
