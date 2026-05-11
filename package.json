@@ -6,9 +6,9 @@
   "exports": "./dist/index.js",
   "repository": "https://github.com/ts-stack/type-is",
   "scripts": {
-    "start": "npm run build && node dist/index.js",
-    "test": "npm run build && npm run esm-jest",
-    "esm-jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "start": "yarn build && node dist/index.js",
+    "test": "yarn build && yarn esm-jest",
+    "esm-jest": "node --experimental-vm-modules $(yarn bin jest)",
     "build": "tsc -b tsconfig.build.json",
     "clean": "rimraf dist*"
   },
