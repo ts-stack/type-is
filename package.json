@@ -1,7 +1,7 @@
 {
   "name": "@ts-stack/type-is",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A fork of the widely used `type-is` library, but this one accepts headers instead of a request object.",
   "exports": "./dist/index.js",
   "repository": "https://github.com/ts-stack/type-is",
